@@ -87,6 +87,29 @@
       (println "seq-of-seqs: " seq-of-seqs)
       (throw ex))))
 
+(def-real-multi combine-tiles [horizontal-row dir] dir)
+
+(defmethod combine-tiles :left [horizontal-row dir]
+  (let [toret (->> horizontal-row
+                   (partition-by identity)
+                   (map (fn [[a b & rest :as params]]
+                          (if (every? (partial = false) params)
+                            params
+                            (concat (vector
+                                     (if (and a (nil? b)) a
+                                         (if (and a b)
+                                           (+ a b)))) rest))))
+                   flatten
+                   vec)
+        recur? (->> toret
+                    (partition-by identity)
+                    (some #(and (not (every? (partial = false) %))
+                            (> (count %) 1))))]
+    (if recur?
+      (recur toret dir)
+      toret)))  
+                
+  
 
 (defn move [world dir]
   {:pre [(or
@@ -94,18 +117,19 @@
           (= dir :right)
           (= dir :up)
           (= dir :down))]}
-  (if (or
-       (= dir :left)
-       (= dir :right))
-    (vectorify-2d (map #(do-move % dir) world))
-    (let [direction (case dir
-                      :up :left
-                      :down :right
-                      :error)]
-      (-> world
-           transpose
-           (move direction)
-           transpose))))
+  (let [moved-world
+        (if (or
+             (= dir :left)
+             (= dir :right))
+          (vectorify-2d (map #(do-move % dir) world))
+          (let [direction (case dir
+                            :up :left
+                            :down :right
+                            :error)]
+            (-> world
+                transpose
+                (move direction)
+                transpose)))]
   
 
 (defn move! [dir]
