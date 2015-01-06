@@ -23,6 +23,9 @@
       (nth y)
       (nth x)))
 
+(defn getin! [x y]
+  (getin @world x y))
+
 (defn pretty-print-world! []
   (pprint  @world))
 
@@ -165,3 +168,5 @@
   (swap! world move dir)
   (spawn-randomly!)
   (pretty-print-world!))
+
+(spawn-randomly!)
