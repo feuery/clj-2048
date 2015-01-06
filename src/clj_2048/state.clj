@@ -87,10 +87,11 @@
       (println "seq-of-seqs: " seq-of-seqs)
       (throw ex))))
 
-(def-real-multi combine-tiles [horizontal-row dir] dir)
+(def-real-multi do-combine-tiles [horizontal-row dir] dir)
 
-(defmethod combine-tiles :left [horizontal-row dir]
-  (let [toret (->> horizontal-row
+(defmethod do-combine-tiles :left [horizontal-row dir]
+  (let [original-w (count horizontal-row)
+        toret (->> horizontal-row
                    (partition-by identity)
                    (map (fn [[a b & rest :as params]]
                           (if (every? (partial = false) params)
@@ -104,19 +105,40 @@
         recur? (->> toret
                     (partition-by identity)
                     (some #(and (not (every? (partial = false) %))
-                            (> (count %) 1))))]
+                                (> (count %) 1))))
+        tiles-to-add (- original-w
+                        (count toret))]
     (if recur?
-      (recur toret dir)
-      toret)))
+      (concat (do-combine-tiles toret dir)
+              (repeat tiles-to-add false))
+      (concat toret
+              (repeat tiles-to-add false)))))
 
-(defmethod combine-tiles :right [horizontal-row dir]
+(defmethod do-combine-tiles :right [horizontal-row dir]
   (-> horizontal-row
       reverse
-      (combine-tiles :left)
+      (do-combine-tiles :left)
       reverse))
-                
-  
 
+(defn combine-tiles [world dir]
+  {:pre [(or
+          (= dir :left)
+          (= dir :right)
+          (= dir :up)
+          (= dir :down))]}
+        (if (or
+             (= dir :left)
+             (= dir :right))
+          (map #(do-combine-tiles % dir) world)
+          (let [direction (case dir
+                            :up :left
+                            :down :right
+                            :error)]
+            (-> world
+                transpose
+                (combine-tiles direction)
+                transpose))))
+          
 (defn move [world dir]
   {:pre [(or
           (= dir :left)
@@ -136,6 +158,7 @@
                 transpose
                 (move direction)
                 transpose)))]
+    (vectorify-2d (combine-tiles moved-world dir))))
   
 
 (defn move! [dir]
