@@ -107,7 +107,13 @@
                             (> (count %) 1))))]
     (if recur?
       (recur toret dir)
-      toret)))  
+      toret)))
+
+(defmethod combine-tiles :right [horizontal-row dir]
+  (-> horizontal-row
+      reverse
+      (combine-tiles :left)
+      reverse))
                 
   
 
