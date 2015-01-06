@@ -55,7 +55,7 @@
   "Changes the current state of the game. When this returns symbol :you-lost, game is over."
   (swap! world spawn-randomly))
 
-(def-real-multi move-horizontal [_ dir] dir)
+(def-real-multi do-move [_ dir] dir)
 
 (defn filter-false-tiles [horizontal-row]
   (->>  horizontal-row
@@ -63,7 +63,7 @@
         (filter #(not= false (first %)))
         flatten))
 
-(defmethod move-horizontal :right [horizontal-row dir]
+(defmethod do-move :right [horizontal-row dir]
   (let [significant-row (filter-false-tiles horizontal-row)
         number-of-falses (- (count horizontal-row)
                             (count significant-row))]
@@ -71,18 +71,42 @@
             significant-row)))    
     
 
-(defmethod move-horizontal :left [horizontal-row dir]
+(defmethod do-move :left [horizontal-row dir]
   (let [significant-row (filter-false-tiles horizontal-row)
         number-of-falses (- (count horizontal-row)
                             (count significant-row))]
     (concat significant-row
             (repeat number-of-falses false))))
 
+(defn transpose [seq-of-seqs]
+  {:pre [(not (empty? seq-of-seqs))]}
+  (try
+    (apply mapv vector seq-of-seqs)
+    (catch clojure.lang.ArityException ex
+      (println "ArityEx @ transpose")
+      (println "seq-of-seqs: " seq-of-seqs)
+      (throw ex))))
+
+
 (defn move [world dir]
+  {:pre [(or
+          (= dir :left)
+          (= dir :right)
+          (= dir :up)
+          (= dir :down))]}
   (if (or
        (= dir :left)
        (= dir :right))
-    (vectorify-2d (map #(move-horizontal % dir) world))))
+    (vectorify-2d (map #(do-move % dir) world))
+    (let [direction (case dir
+                      :up :left
+                      :down :right
+                      :error)]
+      (-> world
+           transpose
+           (move direction)
+           transpose))))
+  
 
 (defn move! [dir]
   (swap! world move dir)
