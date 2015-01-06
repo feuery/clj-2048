@@ -1,5 +1,7 @@
 (ns clj-2048.state
-  (:require [clojure.pprint :refer [pprint]]))
+  (:require [clojure.pprint :refer [pprint]]
+            [clojure.stacktrace :refer [print-stack-trace]]
+            [clj-2048.macros.multi :refer :all]))
 
 (def W 6)
 (def H 4)
@@ -15,15 +17,6 @@
                        (repeat W)
                        (repeat H)
                        vectorify-2d)))
-
-(defn transpose [seq-of-seqs]
-  {:pre [(not (empty? seq-of-seqs))]}
-  (try
-    (apply mapv vector seq-of-seqs)
-    (catch clojure.lang.ArityException ex
-      (println "ArityEx @ transpose")
-      (println "seq-of-seqs: " seq-of-seqs)
-      (throw ex))))
 
 (defn getin [vec x y]
   (-> vec
@@ -61,3 +54,37 @@
 (defn spawn-randomly! []
   "Changes the current state of the game. When this returns symbol :you-lost, game is over."
   (swap! world spawn-randomly))
+
+(def-real-multi move-horizontal [_ dir] dir)
+
+(defn filter-false-tiles [horizontal-row]
+  (->>  horizontal-row
+        (partition-by (partial = false))
+        (filter #(not= false (first %)))
+        flatten))
+
+(defmethod move-horizontal :right [horizontal-row dir]
+  (let [significant-row (filter-false-tiles horizontal-row)
+        number-of-falses (- (count horizontal-row)
+                            (count significant-row))]
+    (concat (repeat number-of-falses false)
+            significant-row)))    
+    
+
+(defmethod move-horizontal :left [horizontal-row dir]
+  (let [significant-row (filter-false-tiles horizontal-row)
+        number-of-falses (- (count horizontal-row)
+                            (count significant-row))]
+    (concat significant-row
+            (repeat number-of-falses false))))
+
+(defn move [world dir]
+  (if (or
+       (= dir :left)
+       (= dir :right))
+    (vectorify-2d (map #(move-horizontal % dir) world))))
+
+(defn move! [dir]
+  (swap! world move dir)
+  (spawn-randomly!)
+  (pretty-print-world!))
