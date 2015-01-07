@@ -3,7 +3,8 @@
             [merpg.2D.make-game :refer :all]
             [clj-2048.state :refer [getin! move! lost?
                                     W H]])
-  (:import  [java.awt Color Font]))
+  (:import  [java.awt Color Font])
+  (:gen-class))
 
 (alter-var-root #'*out* (constantly *out*))
 
@@ -36,7 +37,8 @@
       (Draw "YOU LOST" [400 300])))
   {})
 
-(merpg.2D.make-game/make-game {}
+(defn -main [& _]
+  (merpg.2D.make-game/make-game {}
              :window-width 800
              :window-height 600
              :mouse-clicked identity
@@ -54,4 +56,4 @@
                              
              :title "CLJ-2048 by Feuer   -   inspired by Gabriele Cirulli"
              :pre-drawqueue #'render             
-             :post-drawqueue #'render-lost )
+             :post-drawqueue #'render-lost ))

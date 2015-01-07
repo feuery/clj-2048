@@ -145,6 +145,24 @@
                 transpose
                 (combine-tiles direction)
                 transpose))))
+
+(defn can-move? [world dir]
+  (if (or (= dir :left)
+          (= dir :right))
+       (->> world
+       (map (fn [horizontal-row]
+              (let [significant-row (filter-false-tiles horizontal-row)]
+                    (- (count horizontal-row)
+                       (count significant-row)))))
+       (reduce +)
+       pos?)
+       (let [dir (case dir
+                            :up :left
+                            :down :right
+                            :error)]
+         (if-not (nil? dir)
+           (recur (transpose world) dir)
+           false))))
           
 (defn move [world dir]
   {:pre [(or
@@ -152,20 +170,21 @@
           (= dir :right)
           (= dir :up)
           (= dir :down))]}
-  (let [moved-world
-        (if (or
-             (= dir :left)
-             (= dir :right))
-          (vectorify-2d (map #(do-move % dir) world))
-          (let [direction (case dir
-                            :up :left
-                            :down :right
-                            :error)]
-            (-> world
-                transpose
-                (move direction)
-                transpose)))]
-    (vectorify-2d (combine-tiles moved-world dir))))
+  (if (can-move? world dir)
+    (let [moved-world
+          (if (or
+               (= dir :left)
+               (= dir :right))
+            (vectorify-2d (map #(do-move % dir) world))
+            (let [direction (case dir
+                              :up :left
+                              :down :right
+                              :error)]
+              (-> world
+                  transpose
+                  (move direction)
+                  transpose)))]
+      (vectorify-2d (combine-tiles moved-world dir)))))
   
 
 (defn move! [dir]
