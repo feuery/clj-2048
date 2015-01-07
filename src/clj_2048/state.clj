@@ -3,7 +3,7 @@
             [clojure.stacktrace :refer [print-stack-trace]]
             [clj-2048.macros.multi :refer :all]))
 
-(def W 6)
+(def W 4)
 (def H 4)
 
 (defn vectorify-2d [seq]
@@ -166,6 +166,7 @@
 
 (defn move! [dir]
   (swap! world move dir)
+  ;; @TODO skip the rest when (= @world :you-lost)
   (spawn-randomly!)
   (pretty-print-world!))
 
