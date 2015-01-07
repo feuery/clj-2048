@@ -1,4 +1,3 @@
-;;Resume do-combine-tiles [:left :original]
 (ns clj-2048.core
   (:require [merpg.2D.core :refer :all]
             [merpg.2D.make-game :refer :all]
@@ -13,8 +12,9 @@
 (defn render [& _]
   (dotimes [x W]
     (dotimes [y H]
-      (let [tile (getin! x y)
-            color (if (= tile false)
+      (let [tile (getin! x y)]
+        (when-not (nil? tile)
+          (let [color (if (= tile false)
                     "#888888"
                     (Color. (int (mod tile 255))
                             (int (mod (* tile Math/PI) 255))
@@ -22,15 +22,15 @@
         (with-color color
           (Rect (+ (* 100 x) 10)
                 (+ (* 100 y) 10)
-                90 90 :fill? true))
+                90 90 :fill? true)))
         (if tile
           (with-color Color/WHITE
             (Draw (str tile) [(+ (* 100 x)
                                  30)
                               (- (* 100 (inc y))
                                  45)
-                              ])))
-        ))))
+                              ])))))))
+  {})
 
 (defn render-lost [_]
   (when @lost?
@@ -51,8 +51,8 @@
                                            (key-down? :right) :right)]
                            (when-not (nil? direction)
                              (if (= (move! direction) :you-lost)
-                               (reset! lost? true)))
-                           {})))
+                               (reset! lost? true)))))
+                       {})
                              
              :title "CLJ-2048 by Feuer   -   inspired by Gabriele Cirulli"
              :pre-drawqueue #'render             

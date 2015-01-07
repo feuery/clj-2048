@@ -95,32 +95,7 @@
                                  (Rect 0 0 (width) (height) :fill? true)
                                  
                                  (pre-drawqueue @state)
-                                 
-                                 (let [*draw-queue* (->> @state
-                                                         (filter map-entry?)
-                                                         (map #(nth % 1))
-                                                         (filter merpg-object?))]
-                                   
-                                   (doseq [to-draw *draw-queue*]
-                                     ;; Now we can init state to the objects-map without damning the rendering process
-                                     (try
-                                       (Draw (if (and (not (merpg-object? to-draw))
-                                                      (map-entry? to-draw))
-                                               (nth to-draw 1)
-                                               to-draw))
-                                       (catch IllegalArgumentException ex
-                                         (println "Nyt kusee dispatching...")
-                                         (println "Piirrettävä olio tyyppiä: " (get-class to-draw))
-                                         (throw ex))
-                                       (catch UnsupportedOperationException ex
-                                         (println "Nth epäonnistui?")
-                                         (println "(not (Objekti?)) " (not (merpg-object? to-draw)))
-                                         (println "map-entry?" (map-entry? to-draw))
-                                         (throw ex))
-                                       (catch Exception ex
-                                         (println "Rendering failed")
-                                         (throw ex)))))
-
+                                                                  
                                  (post-drawqueue @state)
                                  
                                  (.repaint viewport)
@@ -132,7 +107,8 @@
                                    (recur)))
                                (catch UnsupportedOperationException ex
                                  (println "Joku tekee tyhmiä juttuja jollekkin tässä säikeessä")
-                                 (println ex))))))
+                                 (println ex)
+                                 (throw ex))))))
                       (.start))]
     (println "Everything set up")
     (seesaw/config! f :content viewport)

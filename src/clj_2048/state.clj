@@ -19,9 +19,11 @@
                        vectorify-2d)))
 
 (defn getin [vec x y]
-  (-> vec
-      (nth y)
-      (nth x)))
+  (if (= vec :you-lost)
+    (println "You've lost @ getin")
+    (-> vec
+        (nth y)
+        (nth x))))
 
 (defn getin! [x y]
   (getin @world x y))
@@ -37,22 +39,24 @@
 
 (defn spawn-randomly [world]
   "Returns a new world with a 2 or 4 - tile spawned randomly"
-  (let [new-tile (if (< (rand-int 10) 5)
-                   2
-                   4)
-        coord-pairs (for [x (range 0 (width world))
-                          y (range 0 (height world))]
-                      [x y])
-        viable-coord-pairs (->> coord-pairs
-                                (filter (complement (partial get-in world))))
-        ;;Nth returns what it's supposed to and get returns garbage - wtf clj?
-        final-coord-pair (nth viable-coord-pairs (rand-int (count viable-coord-pairs))
-                              :you-lost)]
-    (if (= final-coord-pair :you-lost)
-      :you-lost
-      (->> new-tile
-           (assoc-in world final-coord-pair)
-           vectorify-2d))))
+  (if-not (= world :you-lost)
+    (let [new-tile (if (< (rand-int 10) 5)
+                     2
+                     4)
+          coord-pairs (for [x (range 0 (width world))
+                            y (range 0 (height world))]
+                        [x y])
+          viable-coord-pairs (->> coord-pairs
+                                  (filter (complement (partial get-in world))))
+          ;;Nth returns what it's supposed to and get returns garbage - wtf clj?
+          final-coord-pair (nth viable-coord-pairs (rand-int (count viable-coord-pairs))
+                                :you-lost)]
+      (if (= final-coord-pair :you-lost)
+        :you-lost
+        (->> new-tile
+             (assoc-in world final-coord-pair)
+             vectorify-2d)))
+    world))
 
 (defn spawn-randomly! []
   "Changes the current state of the game. When this returns symbol :you-lost, game is over."
