@@ -1,10 +1,29 @@
 (ns clj-2048.state
   (:require [clojure.pprint :refer [pprint]]
             [clojure.stacktrace :refer [print-stack-trace]]
-            [clj-2048.macros.multi :refer :all]))
+            [clojure.java.io :as io]
+            [clj-2048.macros.multi :refer :all]
+            [seesaw.core :refer [alert]]))
 
-(def W 4)
-(def H 4)
+(defn get-settings []
+  (let [conf-file-name (-> (System/getProperty "user.home")
+                           (str "/.clj-2048"))]
+    (when-not (-> conf-file-name
+                  io/file
+                  .exists)
+      (spit conf-file-name ";; This config file is just runnable clojure. You can modify it to do stuff - just make sure to leave this map at the tail position\n {:w 4\n :h 4\n :screen-w 800\n :screen-h 600\n}")
+      (alert (str "Created a conf file at " conf-file-name ". Try to edit it and reload the game, if you dare!")))
+    (let [toret (-> conf-file-name
+        slurp
+        read-string
+        eval)]
+      (println "Config: " toret)
+      toret)))
+
+(def settings (get-settings))
+
+(def W (:w settings))
+(def H (:h settings))
 
 (defn vectorify-2d [seq]
   (->> seq

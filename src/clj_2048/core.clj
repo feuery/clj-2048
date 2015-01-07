@@ -1,7 +1,9 @@
 (ns clj-2048.core
   (:require [merpg.2D.core :refer :all]
             [merpg.2D.make-game :refer :all]
+            
             [clj-2048.state :refer [getin! move! lost?
+                                    settings
                                     W H]])
   (:import  [java.awt Color Font])
   (:gen-class))
@@ -39,9 +41,8 @@
 
 (defn -main [& _]
   (merpg.2D.make-game/make-game {}
-             :window-width 800
-             :window-height 600
-             :mouse-clicked identity
+             :window-width (:screen-w settings)
+             :window-height (:screen-h settings)
              :update (fn [_]
                        (when-not @lost?
                          (let [direction (cond

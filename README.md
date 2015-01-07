@@ -8,6 +8,8 @@ Download the latest release from the [Releases](https://github.com/feuery/clj-20
 
 After you've extracted the zip, run the game either by calling 'java -jar ./path/to/jarfile.jar' or double clicking it in you file GUI of choice.
 
+Game makes a conf file full of executable clojure in the user.home/.clj-2048. I sincerely encourage you to hack it.
+
 ## License
 
 Copyright © 2015 Feuer
