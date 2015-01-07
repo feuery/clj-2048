@@ -165,9 +165,10 @@
   
 
 (defn move! [dir]
-  (swap! world move dir)
-  ;; @TODO skip the rest when (= @world :you-lost)
-  (spawn-randomly!)
-  (pretty-print-world!))
+  (if (= (swap! world move dir) :you-lost)
+    :you-lost
+    (do
+      (spawn-randomly!)
+      (pretty-print-world!))))
 
 (spawn-randomly!)

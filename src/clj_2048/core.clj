@@ -1,3 +1,4 @@
+;;Resume do-combine-tiles [:left :original]
 (ns clj-2048.core
   (:require [merpg.2D.core :refer :all]
             [merpg.2D.make-game :refer :all]
@@ -6,6 +7,8 @@
   (:import  [java.awt Color Font]))
 
 (alter-var-root #'*out* (constantly *out*))
+
+(def lost? (atom false))
 
 (defn render [& _]
   (dotimes [x W]
@@ -29,21 +32,28 @@
                               ])))
         ))))
 
+(defn render-lost [_]
+  (when @lost?
+    (with-color "#FF0000"
+      (Draw "YOU LOST" [400 300])))
+  {})
+
 (merpg.2D.make-game/make-game {}
              :window-width 800
-             :window-height 800
+             :window-height 600
              :mouse-clicked identity
              :update (fn [_]
-                       (let [direction (cond
-                                         (key-down? :down) :down
-                                         (key-down? :up) :up
-                                         (key-down? :left) :left
-                                         (key-down? :right) :right)]
-                         (when-not (nil? direction)
-                           ;; @TODO When this returns :you-lost, render the state correctly
-                           (move! direction))
-                         {}))
+                       (when-not @lost?
+                         (let [direction (cond
+                                           (key-down? :down) :down
+                                           (key-down? :up) :up
+                                           (key-down? :left) :left
+                                           (key-down? :right) :right)]
+                           (when-not (nil? direction)
+                             (if (= (move! direction) :you-lost)
+                               (reset! lost? true)))
+                           {})))
                              
              :title "CLJ-2048 by Feuer   -   inspired by Gabriele Cirulli"
              :pre-drawqueue #'render             
-             :post-drawqueue identity )
+             :post-drawqueue #'render-lost )
