@@ -18,12 +18,12 @@
                        (repeat H)
                        vectorify-2d)))
 
+(def lost? (atom false))
+
 (defn getin [vec x y]
-  (if (= vec :you-lost)
-    (println "You've lost @ getin")
-    (-> vec
-        (nth y)
-        (nth x))))
+  (-> vec
+      (nth y)
+      (nth x)))
 
 (defn getin! [x y]
   (getin @world x y))
@@ -39,27 +39,27 @@
 
 (defn spawn-randomly [world]
   "Returns a new world with a 2 or 4 - tile spawned randomly"
-  (if-not (= world :you-lost)
-    (let [new-tile (if (< (rand-int 10) 5)
-                     2
-                     4)
-          coord-pairs (for [x (range 0 (width world))
-                            y (range 0 (height world))]
-                        [x y])
-          viable-coord-pairs (->> coord-pairs
-                                  (filter (complement (partial get-in world))))
-          ;;Nth returns what it's supposed to and get returns garbage - wtf clj?
-          final-coord-pair (nth viable-coord-pairs (rand-int (count viable-coord-pairs))
-                                :you-lost)]
-      (if (= final-coord-pair :you-lost)
-        :you-lost
-        (->> new-tile
-             (assoc-in world final-coord-pair)
-             vectorify-2d)))
-    world))
+  (let [new-tile (if (< (rand-int 10) 5)
+                   2
+                   4)
+        coord-pairs (for [x (range 0 (width world))
+                          y (range 0 (height world))]
+                      [x y])
+        viable-coord-pairs (->> coord-pairs
+                                (filter (complement (partial get-in world))))
+        ;;Nth returns what it's supposed to and get returns garbage - wtf clj?
+        final-coord-pair (nth viable-coord-pairs (rand-int (count viable-coord-pairs))
+                              :you-lost)]
+    (if (= final-coord-pair :you-lost)
+      (do
+        (reset! lost? true)
+        world)
+      (->> new-tile
+           (assoc-in world final-coord-pair)
+           vectorify-2d))))
 
 (defn spawn-randomly! []
-  "Changes the current state of the game. When this returns symbol :you-lost, game is over."
+  "Changes the current state of the game. Never returns nothing but a vec"
   (swap! world spawn-randomly))
 
 (def-real-multi do-move [_ dir] dir)
@@ -169,10 +169,9 @@
   
 
 (defn move! [dir]
-  (if (= (swap! world move dir) :you-lost)
-    :you-lost
-    (do
-      (spawn-randomly!)
-      (pretty-print-world!))))
+  (swap! world move dir)
+  (if-not @lost?
+    (spawn-randomly!)
+    (pretty-print-world!)))
 
 (spawn-randomly!)

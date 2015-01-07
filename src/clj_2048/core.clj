@@ -1,13 +1,11 @@
 (ns clj-2048.core
   (:require [merpg.2D.core :refer :all]
             [merpg.2D.make-game :refer :all]
-            [clj-2048.state :refer [getin! move!
+            [clj-2048.state :refer [getin! move! lost?
                                     W H]])
   (:import  [java.awt Color Font]))
 
 (alter-var-root #'*out* (constantly *out*))
-
-(def lost? (atom false))
 
 (defn render [& _]
   (dotimes [x W]
